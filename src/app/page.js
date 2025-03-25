@@ -1,103 +1,167 @@
-import Image from "next/image";
+"use client"
+import Todo from "@/Components/Todo";
+import axios from "axios";
+import { useEffect, useState } from "react";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css'
+import Spinner from "@/Components/Spinner";
+import TodoDetailPage from "@/Components/TodoDetailPage";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.js
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [formData, setFormData] = useState({
+    title: "",
+    description: ""
+  });
+  const [todoData, setTodoData] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [viewingTodo, setViewingTodo] = useState(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+  const fetchTodos = async () => {
+    setLoading(true);
+    try {
+      const response = await axios('/api');
+      setTodoData(response.data.todos);
+    } catch (error) {
+      toast.error('Failed to fetch todos');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTodos();
+  }, []);
+
+  const onChangeHandler = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const onSubmitHandler = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post('/api', formData);
+      toast.success(response.data.Msg);
+      setFormData({ title: "", description: "" });
+      await fetchTodos();
+    } catch (error) {
+      toast.error('Error creating todo');
+    }
+  };
+
+  const deleteTodo = async (id) => {
+    try {
+      const response = await axios.delete('/api', { params: { mongoId: id } });
+      toast.success(response.data.Msg);
+      await fetchTodos();
+    } catch (error) {
+      toast.error('Error deleting todo');
+    }
+  };
+
+  const completeTodo = async (id) => {
+    try {
+      const response = await axios.put('/api', {}, { params: { mongoId: id } });
+      toast.success(response.data.Msg);
+      await fetchTodos();
+    } catch (error) {
+      toast.error('Error completing todo');
+    }
+  };
+
+  // search by id& title &description
+  const filteredTodos = todoData.filter(todo => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      todo._id.toString().toLowerCase().includes(searchLower) ||
+      todo.title.toLowerCase().includes(searchLower) ||
+      todo.description.toLowerCase().includes(searchLower)
+    );
+  });
+
+  return (
+    <>
+      <ToastContainer theme="dark"/>
+      <form onSubmit={onSubmitHandler} className="flex items-start flex-col gap-2 w-[80%] max-w-[600px] mt-24 px-2 mx-auto">
+        <input
+          type="text"
+          value={formData.title}
+          onChange={onChangeHandler}
+          placeholder="Enter Title"
+          name="title"
+          className="px-3 py-2 border-2 w-full"
+          required
+        />
+        <textarea
+          name="description"
+          value={formData.description}
+          onChange={onChangeHandler}
+          placeholder="Enter description"
+          className="px-3 py-2 border-2 w-full"
+          required
+        />
+        <button type="submit" className="bg-orange-600 py-3 px-11 text-white">
+          Add Todo
+        </button>
+      </form>
+
+      {/* Unified Search Input */}
+      <div className="my-4 w-[60%] mx-auto">
+        <input
+          type="text"
+          placeholder="Search by ID, title, or description..."
+          className="px-3 py-2 border-2 w-full"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
+
+      {/* Todo Table */}
+      <div className="relative overflow-x-auto mt-6 w-[60%] mx-auto">
+        {loading ? (
+           <div className="text-center py-4">
+           <Spinner size="lg" className="mx-auto" />
+           <p className="mt-2">Loading todos...</p>
+         </div>
+        ) : (
+          <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+            <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+              <tr>
+                <th scope="col" className="px-6 py-3">ID</th>
+                <th scope="col" className="px-6 py-3">Title</th>
+                <th scope="col" className="px-6 py-3">Description</th>
+                <th scope="col" className="px-6 py-3">Status</th>
+                <th scope="col" className="px-6 py-3">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredTodos.length > 0 ? (
+                filteredTodos.map((item, index) => (
+                  <Todo
+                    key={item._id}
+                    id={index + 1}
+                    title={item.title}
+                    description={item.description}
+                    complete={item.isCompleted}
+                    mongoId={item._id}
+                    deleteTodo={deleteTodo}
+                    completeTodo={completeTodo}
+                  />
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5" className="px-6 py-4 text-center">
+                    {searchTerm ? "No matching todos found" : "No todos available"}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+
+    </>
   );
 }

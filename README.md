@@ -28,7 +28,7 @@ A modern fullstack Todo application built with Next.js, NextAuth for authenticat
 - Mongoose (ODM)
 
 ### Deployment
-- Vercel (Frontend)
+- Netlify (Frontend)
 - MongoDB Atlas (Database)
 
 ## Getting Started

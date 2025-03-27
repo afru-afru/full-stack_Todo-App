@@ -1,4 +1,4 @@
-// app/api/route.js
+
 import { connectDb } from "@/lib/config/db";
 import TodoModel from "@/lib/models/ToDoModel";
 import { NextResponse } from "next/server";

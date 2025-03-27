@@ -6,6 +6,8 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'
 import Spinner from "@/Components/Spinner";
 import TodoDetailPage from "@/Components/TodoDetailPage";
+import { useRouter } from "next/navigation";
+
 
 export default function Home() {
   const [formData, setFormData] = useState({
@@ -16,13 +18,16 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [viewingTodo, setViewingTodo] = useState(null);
+  const router = useRouter();
 
   const fetchTodos = async () => {
     setLoading(true);
     try {
-      const response = await axios('/api');
+      const response = await axios.get('/api');
+      console.log(response, "response");
       setTodoData(response.data.todos);
     } catch (error) {
+      console.error(error, "error")
       toast.error('Failed to fetch todos');
     } finally {
       setLoading(false);
@@ -38,6 +43,11 @@ export default function Home() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+
+
+   const handleAddClick = () => {
+     router.push('/form');
+   };
   const onSubmitHandler = async (e) => {
     e.preventDefault();
     try {
@@ -83,39 +93,31 @@ export default function Home() {
   return (
     <>
       <ToastContainer theme="dark"/>
-      <form onSubmit={onSubmitHandler} className="flex items-start flex-col gap-2 w-[80%] max-w-[600px] mt-24 px-2 mx-auto">
-        <input
-          type="text"
-          value={formData.title}
-          onChange={onChangeHandler}
-          placeholder="Enter Title"
-          name="title"
-          className="px-3 py-2 border-2 w-full"
-          required
-        />
-        <textarea
-          name="description"
-          value={formData.description}
-          onChange={onChangeHandler}
-          placeholder="Enter description"
-          className="px-3 py-2 border-2 w-full"
-          required
-        />
-        <button type="submit" className="bg-orange-600 py-3 px-11 text-white">
-          Add Todo
-        </button>
-      </form>
 
-      {/* Unified Search Input */}
-      <div className="my-4 w-[60%] mx-auto">
-        <input
-          type="text"
-          placeholder="Search by ID, title, or description..."
-          className="px-3 py-2 border-2 w-full"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      </div>
+
+      <div className="flex justify-center items-center gap-4 w-full max-w-[800px] mx-auto mt-24 px-4">
+
+  <div className="w-1/2">
+    <input
+      type="text"
+      placeholder="Search by title, or description..."
+      className="px-4 py-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-red-400"
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+    />
+  </div>
+
+  {/* Add Button - equal size */}
+  <div className="w-1/2 flex justify-center">
+    <button
+      className="bg-red-400 hover:bg-red-500 text-white font-medium py-2 px-6 rounded-lg transition-colors duration-200 w-full max-w-[200px]"
+      onClick={handleAddClick}
+    >
+      Add Todo
+    </button>
+  </div>
+</div>
+
 
       {/* Todo Table */}
       <div className="relative overflow-x-auto mt-6 w-[60%] mx-auto">
